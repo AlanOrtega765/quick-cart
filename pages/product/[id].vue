@@ -3,6 +3,9 @@ import type { Product } from '~/types';
 
 const route = useRoute();
 const supabase = useSupabaseClient();
+const store = useCartStore();
+const user = useSupabaseUser();
+const toast = useToast();
 
 const { data: product } = await useAsyncData(async () => {
   const { data, error } = await supabase
@@ -16,6 +19,23 @@ const { data: product } = await useAsyncData(async () => {
   }
   return data as Product;
 });
+
+const addProductToCart = async (product_id: number) => {
+  if (!user.value) {
+    return toast.add({
+      title: 'Ups!, no tienes permisos...',
+      description: 'Debes iniciar sesión para agregar el producto al carrito.',
+      color: 'yellow',
+      icon: 'i-heroicons-key',
+      timeout: 3000,
+    });
+  }
+
+  store.addItemToCart(product_id);
+};
+
+const addProductAndBuy = async (product_id: number) =>
+  store.addItemToCart(product_id, true);
 </script>
 
 <template>
@@ -68,14 +88,16 @@ const { data: product } = await useAsyncData(async () => {
           }}
         </h2>
       </div>
-      <div class="grid grid-cols-2 mt-4 gap-x-4">
+      <div v-if="product" class="grid grid-cols-2 mt-4 gap-x-4">
         <button
           class="py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-md"
+          @click="addProductToCart(product.id)"
         >
           Añadir al carrito
         </button>
         <button
           class="py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-md"
+          @click="addProductAndBuy(product.id)"
         >
           Comprar ahora
         </button>

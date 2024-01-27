@@ -2,19 +2,18 @@
 import type { Product, Database } from '~/types';
 
 const supabase = useSupabaseClient<Database>();
-const user = useSupabaseUser();
 const store = useCartStore();
 const toast = useToast();
+const user = useSupabaseUser();
 
 const { data: products } = await useAsyncData(async () => {
   const { data } = await supabase.from('products').select('*');
   return data as Product[];
 });
-
 const addProductToCart = async (product_id: number) => {
   if (!user.value) {
     return toast.add({
-      title: 'Ups!, no tienes permisos',
+      title: 'Ups!, no tienes permisos...',
       description: 'Debes iniciar sesión para agregar el producto al carrito.',
       color: 'yellow',
       icon: 'i-heroicons-key',
@@ -22,50 +21,7 @@ const addProductToCart = async (product_id: number) => {
     });
   }
 
-  const { data: existingProduct } = await supabase
-    .from('carts')
-    .select('*')
-    .eq('product_id', product_id)
-    .eq('user_id', user.value?.id)
-    .single();
-
-  if (existingProduct) {
-    const { error } = await supabase
-      .from('carts')
-      .update({
-        quantity: existingProduct.quantity + 1,
-      })
-      .eq('product_id', product_id)
-      .eq('user_id', user.value?.id);
-
-    if (error) return console.log(error);
-
-    store.incrementTotalItems();
-    return toast.add({
-      title: 'Producto en carrito, añadido!',
-      description:
-        'Se ha aumentado la cantidad del producto seleccionado en el carrito.',
-      color: 'green',
-      icon: 'i-heroicons-check-circle',
-      timeout: 4000,
-    });
-  }
-
-  const { error } = await supabase.from('carts').insert({
-    product_id,
-    quantity: 1,
-  });
-
-  if (error) return console.log(error);
-
-  store.incrementTotalItems();
-  toast.add({
-    title: 'Añadido Correctamente!',
-    description: 'Producto añadido al carrito.',
-    color: 'green',
-    icon: 'i-heroicons-check-circle',
-    timeout: 3000,
-  });
+  store.addItemToCart(product_id);
 };
 </script>
 

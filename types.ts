@@ -49,7 +49,7 @@ export interface Product {
 export interface Cart {
   id: number;
   quantity: number;
-  product: Product;
+  products: Product;
   user_id: number;
   created_at?: string;
   updated_at?: string;
